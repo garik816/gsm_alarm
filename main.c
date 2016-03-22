@@ -2,20 +2,22 @@
  * main.c
  *
  *  Created on: 18 февр. 2016
- *      Author: garik
+ *      Author: g@rik
  *
- *
- *
+ *		ATmega8
+ *		внутренний кварц 8 Mgz
  *
  *
  *      to do list:
  *
- *      - обработчики датчиков вызывают функцию alarm()
+ *      - повесить светодиод, будет мигать с определенным периодом  //есть
+ *      - повесить светодиод на аларм								//надо
+ *		- повесить интерфейс программирования + кварц				//под вонросом
  *      -
- *
- *
- *
- *
+ *      -
+ *		- повесить светодиоды
+ *      - пробовать
+ *		-
  *
  *
  */
@@ -25,14 +27,32 @@
 #include <avr/interrupt.h>	// подключаем библиотеку прерываний
 #include <stdlib.h>
 
-char dial[]="ATD+380501025052;\r\n";
+
+
+
+volatile char status; //Хранение статусов
+#define PROTECT     0 //Флаг включения системы защиты
+#define WARNING     1 //Флаг включения сигнализации
+#define ALARM    	2 //Флаг разрешения мигания красного светодиода
+#define SECRET_SET  3 //Флаг нажатия резервной кнопки
+
+volatile char sensor;
+#define HERCON		0
+#define VIBRO		1
+#define RESET		2
+
+
+
+#define Bit_is_set(val, bit)   ((val & (1<<(bit)))!=0)
+#define Bit_is_clear(val, bit)   ((val & (1<<(bit)))==0)
+#define Bit_set(val, bit)   (val) |= ((1<<(bit)))
+#define Bit_reset(val, bit)   (val) &= (~(1<<(bit)))
 
 
 
 
 
-
-void init_UART(void)
+int init_UART(void)
 {
 	//	Установка скорости 9600
 	UBRRH=0;	//	UBRR=f/(16*band)-1 f=8000000Гц band=9600,
@@ -70,10 +90,10 @@ void init_UART(void)
 //			|||||||UCPOL-	в синхронном режиме - тактирование
 //			76543210
 	UCSRC=0b10000110;	//	8-битовая посылка
+	return(1);
 }
 
-//	UART
-void send_Uart(char c)//	Отправка байта
+void send_Uart(unsigned char c)//	Отправка байта
 {
 	while(!(UCSRA&(1<<UDRE)))	//	Устанавливается, когда регистр свободен
 	{}
@@ -92,91 +112,150 @@ void send_int_Uart(unsigned int c)//	Отправка числа от 0000 до 9999
 	temp=c/100;
 	send_Uart(temp/10+'0');
 	send_Uart(temp%10+'0');
-	temp=c%100;
+	temp=c%100;;
 	send_Uart(temp/10+'0');
 	send_Uart(temp%10+'0');
 }
 
-unsigned char getch_Uart(void)//	Получение байта
+int main(void)
 {
-	while(!(UCSRA&(1<<RXC)))	//	Устанавливается, когда регистр свободен
-	{}
-	return UDR;
-}
 
-int main(void){
-
-	DDRC	= 0b00000001;
+	// инициализация и назначение портов
+	DDRC	= 0b00010001;
 	PORTC	= 0b00101110;
 	DDRD	= 0b10000000;
 	PORTD	= 0b00000000;
 
-	init_UART();	//инициализация UART
+
+	init_UART();				//	инициализация UART
+	_delay_ms(1000);			//	задержка 1c
+
+	send_Uart_str("secret - ok\n\r");
+	send_Uart_str("warning_hercon - ok\n\r");
+	send_Uart_str("warning_vibro - ok\n\r");
 
 
-	 /////*значение для счетного регистра*//
-	 TCCR0 = 0;
-	 TCCR0 = (0<<WGM11)|(0<<WGM10);
-	 TCNT0 = 100;
-	 TIFR = (1<<TOV0);
-	 TIMSK |= (1<<TOIE0);
-	 TCCR0 |= (1<<CS02)|(0<<CS01)|(1<<CS00);
-	 ///////////////////////////////////////
+		////*значение для счетного регистра*// при 8 Мц, TCCR1B = (1<<CS12)|(0<<CS11)|(0<<CS10), TCNT1 = 34336 - прерывание = 1000мс
+		TCCR1B = (1<<CS12)|(0<<CS11)|(0<<CS10); // настраиваем делитель (частота прерывания)
+		TIMSK |= (1<<TOIE1); // разрешаем прерывание по переполнению таймера
+		TCNT1 = 34336;        // выставляем начальное значение TCNT1
+		///////////////////////////////////////
+
+		/////*значение для счетного регистра*// при 8 Мц, TCCR0 = (1<<CS12)|(0<<CS11)|(1<<CS10), TCNT0 = 60 - прерывание = 25мс
+		TCCR0 = (1<<CS12)|(0<<CS11)|(1<<CS10); // настраиваем делитель (частота прерывания)
+		TIMSK |= (1<<TOIE0); // разрешаем прерывание по переполнению таймера
+		TCNT0 = 60;        // выставляем начальное значение TCNT0
+		///////////////////////////////////////
 
 
-void loop() {
+
+		sei();							//разрешаем прерывания
 
 
 
-  }
-
-sei();							//разрешаем прерывания
-while (1){						//бесконечный цикл
-	loop();
-	}
+		while (1);						//бесконечный цикл
+			{
+			}
 }
 
 
 
-
-
-ISR(TIMER0_OVF_vect)			//обработчик прерывания
+ISR(TIMER1_OVF_vect)		//работа с флагами (каждые 1000мс)
 {
-   /*перезапись счетного регистра*/
-   TCNT0 = 100;
+	TCNT1 = 34336;			//перезапись счетного регистра
+//	PORTC ^= (1<<4);		//debug
 
-   	/*опрос геркона №1*/
-	if (bit_is_clear(PINC,PC1)) // если кнопка нажата (подключена к gnd, замыкается на vcc)
-		{
-		_delay_ms (150);
-		PORTC |= (1<<0);		//alarm on
-		send_Uart_str(dial);	//send AT_dial to BT
-		}
+		//////	 выключатель сигнализации (тумблер)		//////
+		if(Bit_is_set(sensor, RESET))						//
+			{												//
+				Bit_reset(sensor, RESET);					//
+				Bit_set(status, SECRET_SET);				//
+				send_Uart_str("secret\n\r");	//debug		//
+			}												//
+		//////////======================================//////
 
-//	/*опрос геркона №2*/
-//	else if (bit_is_clear(PINC,PC2)) // если кнопка нажата (подключена к gnd, замыкается на vcc)
-//		{
-//		_delay_ms (150);
-//		PORTC |= (1<<0);		//alarm on
-//		send_Uart_str(dial);	//send AT_dial to BT
-//		}
-//
+		/////////		 опрос геркона на обрыв			//////
+		if(Bit_is_set(sensor, HERCON))						//
+			{												//
+				Bit_reset(sensor, HERCON);					//
+				Bit_set(status, ALARM);						//
+				send_Uart_str("hercon\n\r");	//debug		//
+			}												//
+		//////////======================================//////
+
+		///////	 опрос вибродатчика ("0" - сработка)	//////
+		if(Bit_is_set(sensor, VIBRO))						//
+			{												//
+				Bit_reset(sensor, VIBRO);					//
+				Bit_set(status, WARNING);					//
+				send_Uart_str("vibro\n\r");		//debug		//
+			}												//
+		//////////======================================//////
 
 
-//	/*опрос vibro*/
-	else if (bit_is_set(PINC,PC3)) // если кнопка нажата (подключена к gnd, замыкается на vcc)
-		{
-		_delay_ms (150);
-		PORTC |= (1<<0);		//alarm on
-		send_Uart_str(dial);	//send AT_dial to BT
-		}
+
+
+		//////  		обработка статусов			//////////
+		if(Bit_is_set(status, SECRET_SET))					//
+			{												//
+				send_Uart_str("SECRET\n\r");		//debug	//
+				status = 0;									//
+				PORTC &= (~(1<<0));							//
+			}												//
+															//
+		if(Bit_is_set(status, ALARM))						//
+			{												//
+//				PORTC ^= (1<<4);				//debug		//
+//				send_Uart_str("ALARM\n\r");		//debug		//
+				PORTC |= (1<<0);							//
+			}												//
+															//
+		if(Bit_is_set(status, WARNING))						//
+			{												//
+//				PORTC ^= (1<<0);				//debug		//
+//				send_Uart_str("WARNING\n\r");	//debug		//
+				PORTC |= (1<<0);							//
+			}												//
+		//////////////////////////////////////////////////////
 
 
 
-//	/*опрос кнопки сброса*/
-//	else if (bit_is_set(PINC,PC5)) // если кнопка нажата (подключена к gnd, замыкается на vcc)
-//		{
-//		_delay_ms (150);
-//		PORTC &= (~(1<<0));		//alarm off
-//		}
+
+
+}
+
+ISR(TIMER0_OVF_vect)			//опрос датчиков (каждые 25мс)
+{
+
+	TCNT0 = 60; 			//перезапись счетного регистра
+//	PORTC ^= (1<<0); 		//debug
+
+
+		//////	 выключатель сигнализации (тумблер)		//////
+		if (bit_is_set(PINC,PC5))							//
+			{												//
+				Bit_set(sensor, RESET);						//
+			}												//
+		//////////////////////////////////////////////////////
+
+
+
+		//////			опрос геркона на обрыв			//////
+		if (bit_is_clear(PINC,PC3))							//
+			{												//
+				Bit_set(sensor, HERCON); //Установил флаг	//
+			}												//
+		//////////////////////////////////////////////////////
+
+
+
+		//////	  опрос вибродатчика ("0" - сработка)	 /////
+		if (bit_is_clear(PINC,PC1))							//
+			{												//
+				Bit_set(sensor, VIBRO); //Установил флаг	//
+			}												//
+		//////////////////////////////////////////////////////
+
+
+
 }

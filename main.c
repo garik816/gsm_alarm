@@ -132,6 +132,18 @@ unsigned int call=0;
 
 int main(void)
 {
+	init_UART();                                        // инициализация UART
+	_delay_ms(1000);                                    // задержка 1c
+
+	send_Uart_str("start\n\r");		//debug
+
+	//////////////////////////////////////////////////
+	for(int i=0;i<150;i++)                           // тупо ждем ~102 секунды перед прерыванием
+		{                                           //
+			_delay_ms(1000);                        //
+			i++;                                    //
+		}                                           //
+	//////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////
 	start:                                              //		закладка для goto
@@ -142,9 +154,6 @@ int main(void)
 	cli();                                              //
 	//////////////////////////////////////////////////////
 
-
-
-
 	/////  инициализация и назначение портов     /////////
 	DDRC	= 0b00010001;                               //
 	PORTC	= 0b00101110;                               //
@@ -152,13 +161,12 @@ int main(void)
 	PORTD	= 0b00000000;                               //
 	//////////////////////////////////////////////////////
 
-	init_UART();                                        // инициализация UART
-	_delay_ms(1000);                                    // задержка 1c
+
 
 //  send_Uart_str("secret - ok\n\r");		//debug
 //  send_Uart_str("warning_hercon - ok\n\r");	//debug
 //  send_Uart_str("warning_vibro - ok\n\r");	//debug
-	send_Uart_str("start\n\r");		//debug
+
 
 
 
@@ -175,21 +183,20 @@ int main(void)
 		//////////////////////////////////////////////////
 
 
-		//////////////////////////////////////////////////
-		for(int i=0;i<5;i++)                           // тупо ждем ~90 секунд перед прерыванием
-			{                                           //
-				_delay_ms(1000);                        //
-				i++;                                    //
-			}                                           //
-		//////////////////////////////////////////////////
+
+		send_Uart_str("armed\n\r");		//debug
 
 
-		/////////   отправка SMS    //////////////////////
-		send_Uart_str("AT+CMGS=\"+380501025052\"\n\r"); // номер
-		send_Uart_str("alarm_ARMED");                   // текст
-		send_Uart(26);                                  //
-		send_Uart_str("\n\r");                          //
-		//////////////////////////////////////////////////
+//		/////////   отправка SMS    //////////////////////
+//		send_Uart_str("AT+CMGS=\"+380631020961\"\n\r"); // номер
+//		_delay_ms(25);
+//		send_Uart_str("alarm_ARMED");                   // текст
+//		_delay_ms(25);
+//		send_Uart(26);                                  //
+//		_delay_ms(25);
+//		send_Uart_str("\n\r");                          //
+//		_delay_ms(25);
+//		//////////////////////////////////////////////////
 
 
 
@@ -198,39 +205,40 @@ int main(void)
 
 		for(;;)                                         // бесконечный цикл
 		{
-			if(Bit_is_set(sensor, RESET))           // если поступила команда сброс - переходим в начало программы
-			{
-				send_Uart_str("reset\n\r");     //debug
-				send_int_Uart(sensor);          //debug
-				send_int_Uart(status);          //debug
-				send_Uart_str("\n\r");          //debug
-				goto start;
-			}
+//			if(Bit_is_set(sensor, RESET))           // если поступила команда сброс - переходим в начало программы
+//			{
+//				send_Uart_str("reset\n\r");     //debug
+//				send_int_Uart(sensor);          //debug
+//				send_int_Uart(status);          //debug
+//				send_Uart_str("\n\r");          //debug
+//				goto start;
+//			}
 
-			send_Uart_str("count: ");
-			send_int_Uart(gsm_dial_count);
-			send_Uart_str(", ");
-			send_Uart_str("status: ");
-			send_int_Uart(status);
-			send_Uart_str(", ");
-			send_Uart_str("sensor: ");
-			send_int_Uart(sensor);
-			send_Uart_str("\n\r");
+//			send_Uart_str("count: ");
+//			send_int_Uart(gsm_dial_count);
+//			send_Uart_str(", ");
+//			send_Uart_str("status: ");
+//			send_int_Uart(status);
+//			send_Uart_str(", ");
+//			send_Uart_str("sensor: ");
+//			send_int_Uart(sensor);
+//			send_Uart_str("\n\r");
 
 			if(call==1)
 			{
-				send_Uart_str("ATD+380501025052;\n\r");
+				send_Uart_str("ATD+380679755948;\n\r");
 			}
 
+
 			//////////////////////////////////////////////////
-			for(int i=0;i<10;i++)                           // тупо ждем ~90 секунд перед прерыванием
+			for(int i=0;i<20;i++)                           // тупо ждем ~10 секунд перед прерыванием
 				{                                           //
 					_delay_ms(1000);                        //
 					i++;                                    //
 				}                                           //
 			//////////////////////////////////////////////////
 
-			if((gsm_dial_count>50)&&(sensor==0))
+			if((gsm_dial_count>60)&&(sensor==0))
 			{
 				goto start;
 			}
@@ -252,14 +260,15 @@ ISR(TIMER1_OVF_vect)                             // работа с флагами (каждые 100
 	TCNT1 = 34336;                               // перезапись счетного регистра
 //  PORTC ^= (1<<4);                             //debug
 
-		//////   выключатель сигнализации (тумблер) //////
-		if(Bit_is_set(sensor, RESET))                   //
-			{                                      	    //
-				Bit_reset(sensor, RESET);               //
-				Bit_set(status, SECRET_SET);            //
+//		//////   выключатель сигнализации (тумблер) //////
+//		if(Bit_is_set(sensor, RESET))                   //
+//			{                                      	    //
+//				Bit_reset(sensor, RESET);               //
+//				Bit_set(status, SECRET_SET);			//
+//				call=0;									//
 //				send_Uart_str("secret\n\r");            // debug
-			}                                           //
-		//////////======================================//
+//			}                                           //
+//		//////////======================================//
 
 		/////////        опрос геркона на обрыв     //////
 		if(Bit_is_set(sensor, HERCON))                  //
@@ -283,18 +292,19 @@ ISR(TIMER1_OVF_vect)                             // работа с флагами (каждые 100
 
 
 		/////////////          обработка статусов      ///////////
-		if(Bit_is_set(status, SECRET_SET))                      //
-			{                                                   //
+//		if(Bit_is_set(status, SECRET_SET))                      //
+//			{                                                   //
 //				send_Uart_str("SECRET\n\r");                    // debug
-				status = 0;                                     //
-				PORTC &= (~(1<<0));                             //
-			}                                                   //
-                                                                //
+//				status = 0;                                     //
+//				PORTC &= (~(1<<0));                             //
+//			}                                                   //
+//                                                                //
 		if(Bit_is_set(status, ALARM))                           //
 			{                                                   //
 //				PORTC ^= (1<<4);                                // debug
 //				send_Uart_str("ALARM\n\r");                     // debug
-				PORTC |= (1<<0);                                //
+				PORTC |= (1<<0);
+				PORTC |= (1<<4);								//
 				call=1;											//
 //				send_Uart_str("ATD+380501025052;\n\r");			// звонок
 																//
@@ -308,8 +318,9 @@ ISR(TIMER1_OVF_vect)                             // работа с флагами (каждые 100
 		if(Bit_is_set(status, WARNING))                         //
 				{                                               //
 		//		PORTC ^= (1<<0);                    			// debug
-		//		send_Uart_str("WARNING\n\r");					// debug
-				PORTC |= (1<<0);                                //
+//				send_Uart_str("WARNING\n\r");					// debug
+				PORTC |= (1<<0);
+				PORTC |= (1<<4);								//
 				call=1;											//
 //				send_Uart_str("ATD+380501025052;\n\r");			// звонок
 																//
@@ -334,12 +345,12 @@ ISR(TIMER0_OVF_vect)                                    // опрос датчиков (кажды
 //	PORTC ^= (1<<0);                                    // debug
 
 
-		//////   выключатель сигнализации (тумблер)   ////
-		if (bit_is_set(PINC,PC5))                       //
-				{                                       //
-						Bit_set(sensor, RESET);         //
-				}                                       //
-		//////////////////////////////////////////////////
+//		//////   выключатель сигнализации (тумблер)   ////
+//		if (bit_is_set(PINC,PC5))                       //
+//				{                                       //
+//						Bit_set(sensor, RESET);         //
+//				}                                       //
+//		//////////////////////////////////////////////////
 
 
 

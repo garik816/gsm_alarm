@@ -27,12 +27,16 @@ Discarded input sections
                 0x00000000        0x0 ./main.o
  .text.send_Uart
                 0x00000000        0x0 ./main.o
+ .text.send_int_Uart
+                0x00000000        0x0 ./main.o
  .text          0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodqi4.o)
  .data          0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodqi4.o)
  .bss           0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodqi4.o)
+ .text.libgcc   0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodqi4.o)
  .text          0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodhi4.o)
  .data          0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodhi4.o)
  .bss           0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodhi4.o)
+ .text.libgcc   0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodhi4.o)
  .text          0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_exit.o)
  .data          0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_exit.o)
  .bss           0x00000000        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_exit.o)
@@ -157,7 +161,7 @@ LOAD c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x3ec
+.text           0x00000000      0x2a4
  *(.vectors)
  .vectors       0x00000000       0x26 c:/winavr/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr4/crtm8.o
                 0x00000000                __vectors
@@ -235,26 +239,19 @@ LOAD c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a
  .text.send_Uart_str
                 0x0000005e       0x14 ./main.o
                 0x0000005e                send_Uart_str
- .text.send_int_Uart
-                0x00000072       0x58 ./main.o
-                0x00000072                send_int_Uart
- .text.main     0x000000ca      0x18e ./main.o
-                0x000000ca                main
+ .text.main     0x00000072      0x112 ./main.o
+                0x00000072                main
  .text.__vector_8
-                0x00000258      0x10a ./main.o
-                0x00000258                __vector_8
+                0x00000184       0xe4 ./main.o
+                0x00000184                __vector_8
  .text.__vector_9
-                0x00000362       0x46 ./main.o
-                0x00000362                __vector_9
- .text.libgcc   0x000003a8       0x18 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodqi4.o)
-                0x000003a8                __udivmodqi4
- .text.libgcc   0x000003c0       0x28 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_udivmodhi4.o)
-                0x000003c0                __udivmodhi4
-                0x000003e8                . = ALIGN (0x2)
+                0x00000268       0x38 ./main.o
+                0x00000268                __vector_9
+                0x000002a0                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x000003e8        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_exit.o)
-                0x000003e8                exit
-                0x000003e8                _exit
+ .fini9         0x000002a0        0x0 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_exit.o)
+                0x000002a0                exit
+                0x000002a0                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -273,45 +270,45 @@ LOAD c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x000003e8        0x4 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_exit.o)
+ .fini0         0x000002a0        0x4 c:/winavr/bin/../lib/gcc/avr/4.3.3/avr4\libgcc.a(_exit.o)
  *(.fini0)
-                0x000003ec                _etext = .
+                0x000002a4                _etext = .
 
-.data           0x00800060       0x6a load address 0x000003ec
+.data           0x00800060       0x24 load address 0x000002a4
                 0x00800060                PROVIDE (__data_start, .)
  *(.data)
- .data          0x00800060       0x6a ./main.o
+ .data          0x00800060       0x24 ./main.o
  *(.data*)
  *(.rodata)
  *(.rodata*)
  *(.gnu.linkonce.d*)
-                0x008000ca                . = ALIGN (0x2)
-                0x008000ca                _edata = .
-                0x008000ca                PROVIDE (__data_end, .)
+                0x00800084                . = ALIGN (0x2)
+                0x00800084                _edata = .
+                0x00800084                PROVIDE (__data_end, .)
 
-.bss            0x008000ca        0x6
-                0x008000ca                PROVIDE (__bss_start, .)
+.bss            0x00800084        0x6
+                0x00800084                PROVIDE (__bss_start, .)
  *(.bss)
  *(.bss*)
  .bss.gsm_dial_count
-                0x008000ca        0x2 ./main.o
-                0x008000ca                gsm_dial_count
- .bss.call      0x008000cc        0x2 ./main.o
-                0x008000cc                call
+                0x00800084        0x2 ./main.o
+                0x00800084                gsm_dial_count
+ .bss.call      0x00800086        0x2 ./main.o
+                0x00800086                call
  *(COMMON)
- COMMON         0x008000ce        0x2 ./main.o
-                0x008000ce                sensor
-                0x008000cf                status
-                0x008000d0                PROVIDE (__bss_end, .)
-                0x000003ec                __data_load_start = LOADADDR (.data)
-                0x00000456                __data_load_end = (__data_load_start + SIZEOF (.data))
+ COMMON         0x00800088        0x2 ./main.o
+                0x00800088                sensor
+                0x00800089                status
+                0x0080008a                PROVIDE (__bss_end, .)
+                0x000002a4                __data_load_start = LOADADDR (.data)
+                0x000002c8                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x008000d0        0x0
-                0x008000d0                PROVIDE (__noinit_start, .)
+.noinit         0x0080008a        0x0
+                0x0080008a                PROVIDE (__noinit_start, .)
  *(.noinit*)
-                0x008000d0                PROVIDE (__noinit_end, .)
-                0x008000d0                _end = .
-                0x008000d0                PROVIDE (__heap_start, .)
+                0x0080008a                PROVIDE (__noinit_end, .)
+                0x0080008a                _end = .
+                0x0080008a                PROVIDE (__heap_start, .)
 
 .eeprom         0x00810000        0x0
  *(.eeprom*)
